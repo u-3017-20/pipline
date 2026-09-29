@@ -1,0 +1,38 @@
+name: Weather App CI
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Получаем код из репозитория
+        uses: actions/checkout@v4
+      - name: Устанавливаем Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18.x"
+      - name: Ставим зависимости строго по package-lock.json
+        run: npm ci
+      - name: Запускаем тесты
+        run: npm test
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Получаем код из репозитория
+        uses: actions/checkout@v4
+      - name: Упаковываем приложение в ZIP
+        run: |
+          zip -r weather-app.zip server.js package.json package-lock.json public README.md
+          unzip -l weather-app.zip
+      - name: Публикуем ZIP как артефакт
+        uses: actions/upload-artifact@v4
+        with:
+          name: weather-app-build
+          path: weather-app.zip
+          retention-days: 7
